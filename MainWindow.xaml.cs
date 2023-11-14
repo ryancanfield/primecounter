@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -10,10 +11,12 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace primecounter
 {
@@ -24,19 +27,26 @@ namespace primecounter
     {
         public List <ulong> Primes { get; set; } = new List <ulong> ();
         public ulong Number { get; set; } = 2;
-        CancellationTokenSource CancellationTokenSource;
+        CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        DispatcherTimer dispatcherTimer = new DispatcherTimer();
 
 
         public MainWindow()
         {
             InitializeComponent();
-            PrimesList.ItemsSource = Primes;
+            dispatcherTimer.Tick += dispatcherTimer_Tick;
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
+        }
+
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            NumberTextBox.Text = String.Format("Last Prime = {0}\nTotal Primes = {1}\nPrime Ratio = {2:F3}", Number, Primes.Count(), ((double)Primes.Count()/ (double)Number * 100.0));
         }
 
         private void CalculatePrimes(CancellationToken cancellationToken)
-        {
+        { 
             Primes.Reverse();
-
+            
             while (!cancellationToken.IsCancellationRequested)
             {
                 bool flag = false;
@@ -48,6 +58,8 @@ namespace primecounter
                 {
                     foreach (ulong prime in Primes)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
                         if (prime > Number / 2)
                         {
                             flag = true;
@@ -60,9 +72,8 @@ namespace primecounter
                         }
                     }
                 }
-
                 if (flag)
-                    Primes.Add (Number);
+                    Primes.Add(Number);
                 Number++;
             }
             Primes.Reverse();
@@ -70,16 +81,20 @@ namespace primecounter
 
         private void CalculatePrimes_Click(object sender, RoutedEventArgs e)
         {
-            PrimesList.IsEnabled = false;
-            CancellationTokenSource = new CancellationTokenSource();
-            Task myTask = Task.Run(() => CalculatePrimes(CancellationTokenSource.Token));
-        }
-
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            CancellationTokenSource.Cancel();
-            PrimesList.Items.Refresh();
-            PrimesList.IsEnabled = true;
+            if (!dispatcherTimer.IsEnabled)
+            {
+                CancellationTokenSource = new CancellationTokenSource();
+                dispatcherTimer.Start();
+                Task task = Task.Run(() => CalculatePrimes(CancellationTokenSource.Token));
+            }
+            else
+            {
+                if (CancellationTokenSource != null)
+                {
+                    CancellationTokenSource.Cancel();
+                }
+                dispatcherTimer.Stop();
+            }
         }
     }
 }
