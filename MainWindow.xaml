@@ -9,9 +9,9 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <TextBox x:Name="NumberTextBox" Grid.Row="0"/>
         <TextBox x:Name="MessageTextBox" Grid.Row="1"/>
