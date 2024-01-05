@@ -5,13 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:primecounter"
         mc:Ignorable="d"
-        Title="MainWindow" Height="142" Width="290">
+        Title="MainWindow" Width="200" ResizeMode="NoResize" SizeToContent="Height"
+        DataContext="{local:primeCounter}">
+    
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="NumberTextBox" Grid.Row="0"/>
-        <Button x:Name="Calculate" Content="Start/Stop" Click="CalculatePrimes_Click" Grid.Row="1"/>
+        <TextBox x:Name="NumberTextBox" Text="{Binding LastPrime}" Grid.Row="0"/>
+        <TextBox x:Name="MessageTextBox" Grid.Row="1"/>
+        <Button x:Name="Calculate" Content="Start/Stop" Click="CalculatePrimes_Click" Grid.Row="2"/>
     </Grid>
 </Window>

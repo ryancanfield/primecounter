@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace primecounter
 {
@@ -25,67 +26,44 @@ namespace primecounter
     /// </summary>
     public partial class MainWindow : Window
     {
-        public List <ulong> Primes { get; set; } = new List <ulong> ();
-        public ulong Number { get; set; } = 2;
-        CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        DispatcherTimer dispatcherTimer = new DispatcherTimer();
-
+        private CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+        private DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        private PrimeCounter primeCounter = new PrimeCounter();
 
         public MainWindow()
         {
             InitializeComponent();
-            dispatcherTimer.Tick += dispatcherTimer_Tick;
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
+            //dispatcherTimer.Tick += dispatcherTimer_Tick;
+            //dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
         }
 
-        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        //private void dispatcherTimer_Tick(object sender, EventArgs e)
+        //{
+        //    UpdateNumberBox();
+        //}
+
+        private void UpdateNumberBox()
         {
-            NumberTextBox.Text = String.Format("Last Prime = {0}\nTotal Primes = {1}\nPrime Ratio = {2:F3}", Number, Primes.Count(), ((double)Primes.Count()/ (double)Number * 100.0));
+            NumberTextBox.Text = String.Format("Last Prime = {0}\nTotal Primes = {1}\nPrime Ratio = {2:F3}", primeCounter.LastPrime, primeCounter.Primes.Count(), ((double)primeCounter.Primes.Count() / (double)primeCounter.LastPrime * 100.0));
         }
 
-        private void CalculatePrimes(CancellationToken cancellationToken)
-        { 
-            Primes.Reverse();
-            
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                bool flag = false;
-                if (Number == 2)
-                {
-                    flag = true;
-                }
-                else
-                {
-                    foreach (ulong prime in Primes)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
-                        if (prime > Number / 2)
-                        {
-                            flag = true;
-                            break;
-                        }
-                        if (Number % prime == 0)
-                        {
-                            flag = false;
-                            break;
-                        }
-                    }
-                }
-                if (flag)
-                    Primes.Add(Number);
-                Number++;
-            }
-            Primes.Reverse();
+        private Task RunCalculatePrimesTask(CancellationToken cancellationToken)
+        {
+            Task task = Task.Run(() => primeCounter.CalculatePrimes(cancellationToken));
+            return task;
+
         }
 
-        private void CalculatePrimes_Click(object sender, RoutedEventArgs e)
+        private async void CalculatePrimes_Click(object sender, RoutedEventArgs e)
         {
             if (!dispatcherTimer.IsEnabled)
             {
                 CancellationTokenSource = new CancellationTokenSource();
                 dispatcherTimer.Start();
-                Task task = Task.Run(() => CalculatePrimes(CancellationTokenSource.Token));
+                MessageTextBox.Text = "Calculating...";
+                await RunCalculatePrimesTask(CancellationTokenSource.Token);
+                MessageTextBox.Text = "Stopped";
+
             }
             else
             {
