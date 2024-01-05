@@ -26,52 +26,45 @@ namespace primecounter
     /// </summary>
     public partial class MainWindow : Window
     {
-        private CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-        private DispatcherTimer dispatcherTimer = new DispatcherTimer();
-        private PrimeCounter primeCounter = new PrimeCounter();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private DispatcherTimer _dispatcherTimer = new DispatcherTimer();
+        public PrimeCounter PrimeCounter { get; set; } = new PrimeCounter();
 
         public MainWindow()
         {
             InitializeComponent();
-            //dispatcherTimer.Tick += dispatcherTimer_Tick;
-            //dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
+            _dispatcherTimer.Tick += dispatcherTimer_Tick;
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 30);
         }
 
-        //private void dispatcherTimer_Tick(object sender, EventArgs e)
-        //{
-        //    UpdateNumberBox();
-        //}
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateNumberBox();
+        }
 
         private void UpdateNumberBox()
         {
-            NumberTextBox.Text = String.Format("Last Prime = {0}\nTotal Primes = {1}\nPrime Ratio = {2:F3}", primeCounter.LastPrime, primeCounter.Primes.Count(), ((double)primeCounter.Primes.Count() / (double)primeCounter.LastPrime * 100.0));
-        }
-
-        private Task RunCalculatePrimesTask(CancellationToken cancellationToken)
-        {
-            Task task = Task.Run(() => primeCounter.CalculatePrimes(cancellationToken));
-            return task;
-
+            NumberTextBox.Text = String.Format("Last Prime = {0}\nTotal Primes = {1}\nPrime Ratio = {2:F3}", PrimeCounter.LastPrime, PrimeCounter.Primes.Count(), ((double)PrimeCounter.Primes.Count() / (double)PrimeCounter.LastPrime * 100.0));
         }
 
         private async void CalculatePrimes_Click(object sender, RoutedEventArgs e)
         {
-            if (!dispatcherTimer.IsEnabled)
+            if (!_dispatcherTimer.IsEnabled)
             {
-                CancellationTokenSource = new CancellationTokenSource();
-                dispatcherTimer.Start();
+                _cancellationTokenSource = new CancellationTokenSource();
+                _dispatcherTimer.Start();
                 MessageTextBox.Text = "Calculating...";
-                await RunCalculatePrimesTask(CancellationTokenSource.Token);
+                await PrimeCounter.CalculatePrimesAsync(_cancellationTokenSource.Token);
                 MessageTextBox.Text = "Stopped";
 
             }
             else
             {
-                if (CancellationTokenSource != null)
+                if (_cancellationTokenSource != null)
                 {
-                    CancellationTokenSource.Cancel();
+                    _cancellationTokenSource.Cancel();
                 }
-                dispatcherTimer.Stop();
+                _dispatcherTimer.Stop();
             }
         }
     }

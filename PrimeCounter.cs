@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace primecounter
 {
-    class PrimeCounter : INotifyPropertyChanged
+    public class PrimeCounter : INotifyPropertyChanged
     {
         public List<ulong> Primes { get; private set; } = new List<ulong>();
         public ulong LastPrime { get; set; } = 2;
@@ -28,6 +28,12 @@ namespace primecounter
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public Task CalculatePrimesAsync(CancellationToken cancellationToken)
+        {
+            Task task = Task.Run(() => CalculatePrimes(cancellationToken));
+            return task;
+
+        }
         public void CalculatePrimes(CancellationToken cancellationToken)
         {
             Running = true;
